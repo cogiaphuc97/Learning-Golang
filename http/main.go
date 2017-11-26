@@ -1,8 +1,13 @@
 package main
 
-import "net/http"
-import "fmt"
-import "os"
+import (
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+)
+
+type logWriter struct{}
 
 func main() {
 	resp, err := http.Get("https://www.google.com")
@@ -10,5 +15,14 @@ func main() {
 		fmt.Println("Error:", err)
 		os.Exit(1)
 	}
-	fmt.Println(resp)
+
+	lw := logWriter{}
+
+	io.Copy(lw, resp.Body)
+}
+
+func (logWriter) Write(bs []byte) (int, error) {
+	fmt.Println(string(bs))
+	fmt.Println("Just wrote this many bytes:", len(bs))
+	return len(bs), nil
 }
